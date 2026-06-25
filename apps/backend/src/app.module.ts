@@ -13,6 +13,8 @@ import { EmployeesModule } from './modules/employees/employees.module';
 import { CustomersModule } from './modules/customers/customers.module';
 import { IntegrationsModule } from './modules/integrations/integrations.module';
 import { ReportsModule } from './modules/reports/reports.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { SocketModule } from './modules/socket/socket.module'; // Socket modülü eklendi
 
 @Module({
   imports: [
@@ -46,6 +48,8 @@ import { ReportsModule } from './modules/reports/reports.module';
     CustomersModule,
     IntegrationsModule,
     ReportsModule,
+    AuthModule,
+    SocketModule, // Socket modülü buraya bağlandı
   ],
   controllers: [],
   providers: [],
