@@ -1,0 +1,32 @@
+# Dependency directories
+node_modules/
+jspm_packages/
+web_modules/
+
+# Build outputs
+dist/
+build/
+out/
+
+# Environment variables (Çok Önemli: Şifrelerimizin internete sızmasını önler!)
+.env
+.env.production
+.env.development
+.env.local
+
+# IDEs and editors
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
