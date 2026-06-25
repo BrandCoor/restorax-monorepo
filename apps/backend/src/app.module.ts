@@ -8,6 +8,11 @@ import { MenuModule } from './modules/menu/menu.module';
 import { OrdersModule } from './modules/orders/orders.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { PrinterModule } from './modules/printer/printer.module';
+import { StockModule } from './modules/stock/stock.module';
+import { EmployeesModule } from './modules/employees/employees.module';
+import { CustomersModule } from './modules/customers/customers.module';
+import { IntegrationsModule } from './modules/integrations/integrations.module';
+import { ReportsModule } from './modules/reports/reports.module';
 
 @Module({
   imports: [
@@ -36,6 +41,11 @@ import { PrinterModule } from './modules/printer/printer.module';
     OrdersModule,
     PaymentsModule,
     PrinterModule,
+    StockModule,
+    EmployeesModule,
+    CustomersModule,
+    IntegrationsModule,
+    ReportsModule,
   ],
   controllers: [],
   providers: [],
