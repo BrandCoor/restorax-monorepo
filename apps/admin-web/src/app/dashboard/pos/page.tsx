@@ -106,8 +106,9 @@ export default function POSPage() {
         setSections(sectionsData);
         if (sectionsData.length > 0) setActiveArea(sectionsData[0].id);
       }
-    } catch (error) {
-      console.error('POS verileri yüklenirken hata oluştu:', error);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Bilinmeyen bir hata oluştu';
+      console.error('POS verileri yüklenirken hata oluştu:', message);
     }
   }, [user]);
 
@@ -288,9 +289,10 @@ export default function POSPage() {
       setExistingOrder(null);
       setLeftView('TABLES'); // Masalara geri dön
       void fetchPOSData();
-    } catch (error) {
-      console.error('Sipariş gönderilemedi:', error);
-      alert('Sipariş işlenirken bir hata oluştu.');
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Bilinmeyen bir hata oluştu';
+      console.error('Sipariş gönderilemedi:', message);
+      alert(`Sipariş işlenirken bir hata oluştu: ${message}`);
     } finally {
       setLoading(false);
     }

@@ -64,8 +64,8 @@ export default function TablesPage() {
     try {
       const response = await api.get(`/tables?branchId=${user.branchId}`);
       setSections(response.data as TableSection[]);
-    } catch (error) {
-      console.error('Masalar getirilirken hata oluştu:', error);
+    } catch (error: unknown) {
+      console.error('Masalar getirilirken hata oluştu:', error instanceof Error ? error.message : error);
     } finally {
       setLoading(false);
     }
@@ -111,10 +111,10 @@ export default function TablesPage() {
     try {
       const response = await api.get(`/orders/active-by-table/${table.id}`);
       setActiveOrder(response.data as ActiveOrder);
-    } catch (error) {
-      console.error('Aktif adisyon çekilemedi:', error);
+    } catch (error: unknown) {
+      console.error('Aktif adisyon çekilemedi:', error instanceof Error ? error.message : error);
       setSelectedTable(null);
-      alert('Masaya ait aktif adisyon bulunamadı.');
+      alert('Masaya ait aktif adisyon bulunamadı veya bir hata oluştu.');
     } finally {
       setModalLoading(false);
     }

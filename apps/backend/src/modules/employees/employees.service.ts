@@ -20,29 +20,48 @@ export class EmployeesService {
   ) {}
 
   async create(createEmployeeDto: CreateEmployeeDto) {
-    const role = await this.roleRepository.findOne({
-      where: { name: createEmployeeDto.roleName || 'WAITER' },
-    });
-    if (!role) throw new NotFoundException('Rol bulunamadı.');
+    const queryRunner = this.employeeRepository.manager.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-    const passwordHash = await bcrypt.hash(createEmployeeDto.password, 10);
-    const user = this.userRepository.create({
-      email: createEmployeeDto.email,
-      passwordHash,
-      firstName: createEmployeeDto.firstName,
-      lastName: createEmployeeDto.lastName,
-      phone: createEmployeeDto.phone,
-      role,
-    });
-    const savedUser = await this.userRepository.save(user);
+    try {
+      const role = await queryRunner.manager.findOne(Role, {
+        where: { name: createEmployeeDto.roleName || 'WAITER' },
+      });
+      if (!role) throw new NotFoundException('Rol bulunamadı.');
 
-    const employee = this.employeeRepository.create({
-      userId: savedUser.id,
-      branchId: createEmployeeDto.branchId,
-      salary: createEmployeeDto.salary,
-      workingHours: createEmployeeDto.workingHours,
-    });
-    return this.employeeRepository.save(employee);
+      const existingUser = await queryRunner.manager.findOne(User, {
+        where: { email: createEmployeeDto.email },
+      });
+      if (existingUser) throw new Error('Bu e-posta adresi zaten kullanımda.');
+
+      const passwordHash = await bcrypt.hash(createEmployeeDto.password, 10);
+      const user = queryRunner.manager.create(User, {
+        email: createEmployeeDto.email,
+        passwordHash,
+        firstName: createEmployeeDto.firstName,
+        lastName: createEmployeeDto.lastName,
+        phone: createEmployeeDto.phone,
+        role,
+      });
+      const savedUser = await queryRunner.manager.save(User, user);
+
+      const employee = queryRunner.manager.create(Employee, {
+        userId: savedUser.id,
+        branchId: createEmployeeDto.branchId,
+        salary: createEmployeeDto.salary,
+        workingHours: createEmployeeDto.workingHours,
+      });
+      const savedEmployee = await queryRunner.manager.save(Employee, employee);
+
+      await queryRunner.commitTransaction();
+      return savedEmployee;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   findAll(branchId?: string) {
