@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { StockService } from './stock.service';
 import { CreateStockDto } from './dto/create-stock.dto';
@@ -20,9 +21,32 @@ export class StockController {
     return this.stockService.create(createStockDto);
   }
 
+  @Get('low')
+  findLowStock(@Query('branchId') branchId: string) {
+    return this.stockService.findLowStock(branchId);
+  }
+
+  @Get('recipes/:productId')
+  findRecipes(@Param('productId') productId: string) {
+    return this.stockService.findRecipesByProduct(productId);
+  }
+
+  @Post('recipes')
+  saveRecipe(
+    @Body()
+    body: { productId: string; stockId: string; consumedQuantity: number },
+  ) {
+    return this.stockService.saveRecipe(body);
+  }
+
+  @Delete('recipes/:id')
+  removeRecipe(@Param('id') id: string) {
+    return this.stockService.removeRecipe(id);
+  }
+
   @Get()
-  findAll() {
-    return this.stockService.findAll();
+  findAll(@Query('branchId') branchId?: string) {
+    return this.stockService.findAll(branchId);
   }
 
   @Get(':id')

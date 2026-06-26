@@ -95,11 +95,26 @@ export class AuthService {
       // Her şey başarılıysa veritabanı değişikliklerini kalıcı hale getir [1]
       await queryRunner.commitTransaction();
 
-      return {
-        message: 'Kayıt işlemi başarıyla tamamlandı.',
-        userId: savedUser.id,
+      const payload = {
+        sub: savedUser.id,
+        email: savedUser.email,
+        role: ownerRole.name,
         restaurantId: savedRestaurant.id,
         branchId: savedBranch.id,
+      };
+
+      return {
+        message: 'Kayıt işlemi başarıyla tamamlandı.',
+        accessToken: this.jwtService.sign(payload),
+        user: {
+          id: savedUser.id,
+          email: savedUser.email,
+          firstName: savedUser.firstName,
+          lastName: savedUser.lastName,
+          role: ownerRole.name,
+          restaurantId: savedRestaurant.id,
+          branchId: savedBranch.id,
+        },
       };
     } catch (error) {
       // Bir hata oluştuysa yapılan tüm işlemleri (Restoran, şube dahil) geri al [1]

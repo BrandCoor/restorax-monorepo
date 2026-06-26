@@ -6,6 +6,7 @@ import { Category } from './entities/category.entity';
 import { Product } from './entities/product.entity';
 import { ProductOption } from './entities/product-option.entity';
 import { ProductOptionValue } from './entities/product-option-value.entity';
+import { Branch } from '../restaurants/entities/branch.entity';
 
 @Module({
   imports: [
@@ -14,10 +15,11 @@ import { ProductOptionValue } from './entities/product-option-value.entity';
       Product,
       ProductOption,
       ProductOptionValue,
+      Branch,
     ]),
   ],
   controllers: [MenuController],
   providers: [MenuService],
-  exports: [TypeOrmModule],
+  exports: [MenuService, TypeOrmModule],
 })
 export class MenuModule {}

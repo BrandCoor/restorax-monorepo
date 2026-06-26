@@ -66,6 +66,9 @@ export class Order {
   @Column({ type: 'text', nullable: true })
   note?: string;
 
+  @Column({ name: 'reject_reason', type: 'text', nullable: true })
+  rejectReason?: string;
+
   // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   @OneToMany(() => OrderItem, (item: OrderItem) => item.order)
   items: OrderItem[];

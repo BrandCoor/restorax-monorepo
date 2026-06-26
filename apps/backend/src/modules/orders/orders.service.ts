@@ -12,6 +12,7 @@ import { ProductOptionValue } from '../menu/entities/product-option-value.entity
 import { Stock } from '../stock/entities/stock.entity';
 import { ProductRecipe } from '../stock/entities/product-recipe.entity';
 import { Customer } from '../customers/entities/customer.entity';
+import { Branch } from '../restaurants/entities/branch.entity';
 import { PrinterRule } from '../printer/entities/printer-rule.entity';
 import { PrintJob } from '../printer/entities/print-job.entity';
 import { Payment } from '../payments/entities/payment.entity';
@@ -63,8 +64,16 @@ export class OrdersService implements OnModuleInit {
         });
 
         if (!customer && createOrderDto.customerName) {
+          const branch = await queryRunner.manager.findOne(Branch, {
+            where: { id: createOrderDto.branchId },
+            relations: { restaurant: true },
+          });
+          if (!branch) {
+            throw new NotFoundException('Şube bulunamadı.');
+          }
           customer = queryRunner.manager.create(Customer, {
             phone: createOrderDto.customerPhone,
+            restaurantId: branch.restaurant.id,
             firstName: createOrderDto.customerName.split(' ')[0] || 'Değerli',
             lastName: createOrderDto.customerName.split(' ').slice(1).join(' ') || 'Müşteri',
           });
@@ -93,7 +102,7 @@ export class OrdersService implements OnModuleInit {
           tableId: createOrderDto.orderType === 'TABLE' ? createOrderDto.tableId : undefined,
           waiterId: createOrderDto.waiterId,
           customerId,
-          source: createOrderDto.orderType === 'TABLE' ? 'WAITER' : 'PHONE_DELIVERY',
+          source: createOrderDto.source || (createOrderDto.orderType === 'TABLE' ? 'WAITER' : 'PHONE_DELIVERY'),
           note: createOrderDto.note,
           totalAmount: 0.0,
           guestCount: createOrderDto.guestCount || 1,
@@ -578,7 +587,7 @@ export class OrdersService implements OnModuleInit {
 
       const printJob = queryRunner.manager.create(PrintJob, {
         branchId: order.branchId,
-        printer_id: jobData.printerId,
+        printer: { id: jobData.printerId } as Printer,
         payload: jobData.payloadLines.join('\n'),
         status: 'PENDING',
       });
@@ -763,5 +772,27 @@ export class OrdersService implements OnModuleInit {
   async remove(id: string) {
     await this.dataSource.manager.delete(Order, id);
     return { deleted: true };
+  }
+
+  async printBill(id: string) {
+    const order = await this.dataSource.manager.findOne(Order, {
+      where: { id },
+      relations: { table: true },
+    });
+    if (!order) {
+      throw new NotFoundException('Sipariş bulunamadı.');
+    }
+    if (order.table) {
+      order.table.status = 'BILL_REQUESTED';
+      await this.dataSource.manager.save(Table, order.table);
+    }
+    this.socketGateway.emitToBranch(order.branchId, 'table_status_changed', {
+      tableId: order.tableId,
+    });
+    return { success: true, message: 'Hesap yazdırma isteği gönderildi.' };
+  }
+
+  async settleOrder(id: string, paymentMethod: string, amount: number) {
+    return this.payCustomAmount(id, paymentMethod, amount);
   }
 }

@@ -1,33 +1,77 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Stock } from './entities/stock.entity';
+import { ProductRecipe } from './entities/product-recipe.entity';
 import { CreateStockDto } from './dto/create-stock.dto';
 import { UpdateStockDto } from './dto/update-stock.dto';
 
 @Injectable()
 export class StockService {
-  create(createStockDto: CreateStockDto) {
-    return {
-      message: 'This action adds a new stock item',
-      data: createStockDto,
-    };
+  constructor(
+    @InjectRepository(Stock)
+    private readonly stockRepository: Repository<Stock>,
+    @InjectRepository(ProductRecipe)
+    private readonly recipeRepository: Repository<ProductRecipe>,
+  ) {}
+
+  async create(createStockDto: CreateStockDto) {
+    const stock = this.stockRepository.create(createStockDto);
+    return this.stockRepository.save(stock);
   }
 
-  findAll() {
-    return `This action returns all stock`;
+  findAll(branchId?: string) {
+    if (branchId) {
+      return this.stockRepository.find({
+        where: { branchId },
+        order: { ingredientName: 'ASC' },
+      });
+    }
+    return this.stockRepository.find({ order: { ingredientName: 'ASC' } });
   }
 
-  findOne(id: string) {
-    return `This action returns a #${id} stock item`;
+  async findLowStock(branchId: string) {
+    const items = await this.stockRepository.find({ where: { branchId } });
+    return items.filter(
+      (s) => s.minStockLevel != null && Number(s.quantity) <= Number(s.minStockLevel),
+    );
   }
 
-  update(id: string, updateStockDto: UpdateStockDto) {
-    return {
-      message: `This action updates a #${id} stock item`,
-      id,
-      data: updateStockDto,
-    };
+  async findOne(id: string) {
+    const stock = await this.stockRepository.findOne({ where: { id } });
+    if (!stock) throw new NotFoundException('Stok kaydı bulunamadı.');
+    return stock;
   }
 
-  remove(id: string) {
-    return `This action removes a #${id} stock item`;
+  async update(id: string, updateStockDto: UpdateStockDto) {
+    const stock = await this.findOne(id);
+    Object.assign(stock, updateStockDto);
+    return this.stockRepository.save(stock);
+  }
+
+  async remove(id: string) {
+    await this.stockRepository.delete(id);
+    return { deleted: true };
+  }
+
+  findRecipesByProduct(productId: string) {
+    return this.recipeRepository.find({
+      where: { productId },
+      relations: { stock: true },
+    });
+  }
+
+  async saveRecipe(data: {
+    productId: string;
+    stockId: string;
+    consumedQuantity: number;
+  }) {
+    const recipe = this.recipeRepository.create(data);
+    return this.recipeRepository.save(recipe);
+  }
+
+  async removeRecipe(id: string) {
+    await this.recipeRepository.delete(id);
+    return { deleted: true };
   }
 }

@@ -1,33 +1,49 @@
-import { Injectable } from '@nestjs/common';
-import { CreateRestaurantDto } from './dto/create-restaurant.dto';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Restaurant } from './entities/restaurant.entity';
+import { Branch } from './entities/branch.entity';
 import { UpdateRestaurantDto } from './dto/update-restaurant.dto';
 
 @Injectable()
 export class RestaurantsService {
-  create(createRestaurantDto: CreateRestaurantDto) {
-    return {
-      message: 'This action adds a new restaurant',
-      data: createRestaurantDto,
-    };
+  constructor(
+    @InjectRepository(Restaurant)
+    private readonly restaurantRepository: Repository<Restaurant>,
+    @InjectRepository(Branch)
+    private readonly branchRepository: Repository<Branch>,
+  ) {}
+
+  async findOne(id: string) {
+    const restaurant = await this.restaurantRepository.findOne({
+      where: { id },
+      relations: { branches: true },
+    });
+    if (!restaurant) throw new NotFoundException('Restoran bulunamadı.');
+    return restaurant;
   }
 
-  findAll() {
-    return `This action returns all restaurants`;
+  async findBranch(id: string) {
+    const branch = await this.branchRepository.findOne({
+      where: { id },
+      relations: { restaurant: true },
+    });
+    if (!branch) throw new NotFoundException('Şube bulunamadı.');
+    return branch;
   }
 
-  findOne(id: string) {
-    return `This action returns a #${id} restaurant`;
+  async update(id: string, updateRestaurantDto: UpdateRestaurantDto) {
+    const restaurant = await this.findOne(id);
+    Object.assign(restaurant, updateRestaurantDto);
+    return this.restaurantRepository.save(restaurant);
   }
 
-  update(id: string, updateRestaurantDto: UpdateRestaurantDto) {
-    return {
-      message: `This action updates a #${id} restaurant`,
-      id,
-      data: updateRestaurantDto,
-    };
-  }
-
-  remove(id: string) {
-    return `This action removes a #${id} restaurant`;
+  async updateBranch(
+    id: string,
+    data: { name?: string; address?: string; phone?: string; isActive?: boolean },
+  ) {
+    const branch = await this.findBranch(id);
+    Object.assign(branch, data);
+    return this.branchRepository.save(branch);
   }
 }

@@ -69,7 +69,7 @@ export default function KitchenPage() {
   useEffect(() => {
     if (!user?.branchId) return;
 
-    const socket = getSocket('http://localhost:3000');
+    const socket = getSocket(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000');
     socket.connect();
 
     socket.emit('join_branch', { branchId: user.branchId });
@@ -91,6 +91,13 @@ export default function KitchenPage() {
     };
   }, [user, fetchActiveOrders]);
 
+  const updateStatus = async (orderId: string, status: string) => {
+    await api.patch(`/orders/${orderId}`, { status });
+    void fetchActiveOrders();
+  };
+
+  const kitchenOrders = orders.filter((o) => !['COMPLETED', 'CANCELLED', 'DELIVERED'].includes(o.status));
+
   const getMinutesAgo = (dateString: string) => {
     const diffMs = Math.abs(new Date().getTime() - new Date(dateString).getTime());
     const diffMins = Math.floor(diffMs / (1000 * 60));
@@ -109,7 +116,7 @@ export default function KitchenPage() {
           <p className="text-gray-400 mt-1">Ödemesi bekleyen tüm aktif siparişlerin şefler için yüksek yoğunluklu listesi [1].</p>
         </div>
         <span className="rounded-full bg-indigo-900/50 border border-indigo-900 px-4 py-1.5 text-sm font-semibold text-indigo-400">
-          {orders.length} Hazırlanan Sipariş
+          {kitchenOrders.length} Hazırlanan Sipariş
         </span>
       </div>
 
@@ -117,7 +124,7 @@ export default function KitchenPage() {
         <div className="flex h-64 items-center justify-center text-gray-400">
           Siparişler yükleniyor...
         </div>
-      ) : orders.length === 0 ? (
+      ) : kitchenOrders.length === 0 ? (
         <div className="flex h-64 items-center justify-center rounded-xl border border-dashed border-gray-800 text-gray-500">
           Şu anda mutfakta hazırlanacak sipariş bulunmuyor.
         </div>
@@ -131,11 +138,11 @@ export default function KitchenPage() {
                 <th className="py-3.5 px-4 w-40">Masa / Sipariş</th>
                 <th className="py-3.5 px-4">Sipariş Kalemleri ve Mutfak Detayları</th>
                 <th className="py-3.5 px-4 w-64">Sipariş Notu</th>
-                <th className="py-3.5 px-4 w-40">Hizmet Alan</th>
+                <th className="py-3.5 px-4 w-40">İşlem</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-950">
-              {orders.map((order) => (
+              {kitchenOrders.map((order) => (
                 <tr key={order.id} className="hover:bg-gray-900/10">
                   {/* Sipariş Saati */}
                   <td className="py-4 px-4 font-semibold text-gray-300">
@@ -187,9 +194,16 @@ export default function KitchenPage() {
                     )}
                   </td>
 
-                  {/* Hizmet Alan (Garson) */}
-                  <td className="py-4 px-4 text-xs font-semibold text-gray-500">
-                    {order.waiter ? `${order.waiter.firstName} ${order.waiter.lastName[0]}.` : 'Sistem'}
+                  <td className="py-4 px-4 space-y-1">
+                    {order.status === 'RECEIVED' && (
+                      <button onClick={() => void updateStatus(order.id, 'PREPARING')} className="text-xs px-2 py-1 rounded bg-amber-700 w-full">Hazırlanıyor</button>
+                    )}
+                    {order.status === 'PREPARING' && (
+                      <button onClick={() => void updateStatus(order.id, 'READY')} className="text-xs px-2 py-1 rounded bg-emerald-700 w-full">Hazır</button>
+                    )}
+                    {order.status === 'READY' && (
+                      <span className="text-xs text-emerald-400 font-bold">Servise hazır</span>
+                    )}
                   </td>
                 </tr>
               ))}

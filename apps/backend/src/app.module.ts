@@ -14,7 +14,8 @@ import { CustomersModule } from './modules/customers/customers.module';
 import { IntegrationsModule } from './modules/integrations/integrations.module';
 import { ReportsModule } from './modules/reports/reports.module';
 import { AuthModule } from './modules/auth/auth.module';
-import { SocketModule } from './modules/socket/socket.module'; // Socket modülü eklendi
+import { SocketModule } from './modules/socket/socket.module';
+import { QrMenuModule } from './modules/qr-menu/qr-menu.module';
 
 @Module({
   imports: [
@@ -49,7 +50,8 @@ import { SocketModule } from './modules/socket/socket.module'; // Socket modül�
     IntegrationsModule,
     ReportsModule,
     AuthModule,
-    SocketModule, // Socket modülü buraya bağlandı
+    SocketModule,
+    QrMenuModule,
   ],
   controllers: [],
   providers: [],

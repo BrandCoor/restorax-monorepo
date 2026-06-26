@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { PrinterService } from './printer.service';
 import { CreatePrinterDto } from './dto/create-printer.dto';
@@ -20,9 +21,27 @@ export class PrinterController {
     return this.printerService.create(createPrinterDto);
   }
 
+  @Post('rules')
+  saveRule(
+    @Body()
+    body: {
+      branchId: string;
+      printerId: string;
+      categoryId?: string;
+      productId?: string;
+    },
+  ) {
+    return this.printerService.saveRule(body);
+  }
+
+  @Get('jobs/pending')
+  findPendingJobs(@Query('branchId') branchId: string) {
+    return this.printerService.findPendingJobs(branchId);
+  }
+
   @Get()
-  findAll() {
-    return this.printerService.findAll();
+  findAll(@Query('branchId') branchId?: string) {
+    return this.printerService.findAll(branchId);
   }
 
   @Get(':id')

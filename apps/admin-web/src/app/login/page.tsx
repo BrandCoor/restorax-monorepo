@@ -85,6 +85,12 @@ export default function LoginPage() {
           >
             {loading ? 'Giriş Yapılıyor...' : 'Giriş Yap'}
           </button>
+          <p className="text-center text-sm text-gray-500">
+            Hesabınız yok mu?{' '}
+            <a href="/register" className="text-indigo-400 hover:underline font-semibold">
+              Kayıt olun
+            </a>
+          </p>
         </form>
       </div>
     </div>

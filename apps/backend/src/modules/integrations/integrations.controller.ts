@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { IntegrationsService } from './integrations.service';
 import { CreateIntegrationDto } from './dto/create-integration.dto';
@@ -20,14 +21,33 @@ export class IntegrationsController {
     return this.integrationsService.create(createIntegrationDto);
   }
 
+  @Post('upsert')
+  upsert(
+    @Body()
+    body: {
+      branchId: string;
+      platformName: string;
+      apiKey: string;
+      apiSecret?: string;
+      isActive?: boolean;
+    },
+  ) {
+    return this.integrationsService.upsertPlatform(body);
+  }
+
   @Get()
-  findAll() {
-    return this.integrationsService.findAll();
+  findAll(@Query('branchId') branchId?: string) {
+    return this.integrationsService.findAll(branchId);
   }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.integrationsService.findOne(id);
+  }
+
+  @Patch(':id/toggle')
+  toggle(@Param('id') id: string, @Body('isActive') isActive: boolean) {
+    return this.integrationsService.toggle(id, isActive);
   }
 
   @Patch(':id')

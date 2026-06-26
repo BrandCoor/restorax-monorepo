@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:3000', // Backend sunucumuz artık 3000 portunda çalıştığı için burayı 3000 yaptık
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000',
   headers: {
     'Content-Type': 'application/json',
   },

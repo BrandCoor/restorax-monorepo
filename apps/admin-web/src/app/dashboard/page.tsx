@@ -1,438 +1,161 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
+import Link from 'next/link';
 import { useAuthStore } from '@/store/authStore';
 import api from '@/services/api';
-import { getSocket } from '@/services/socket';
-import { PhoneCall, RefreshCw, Radio, Check, X, Power, PowerOff, ChevronRight, CheckCircle2 } from 'lucide-react';
+import PageHeader from '@/components/PageHeader';
+import {
+  TrendingUp,
+  ShoppingBag,
+  Grid,
+  UtensilsCrossed,
+  AlertTriangle,
+  ArrowRight,
+} from 'lucide-react';
 
-interface OrderItem {
-  id: string;
-  quantity: number;
-  product: {
-    name: string;
-  };
+interface Summary {
+  orderCount: number;
+  totalRevenue: number;
+  averageTicket: number;
+  activeOrders: number;
+  paymentsByMethod: Record<string, number>;
 }
 
-interface Order {
-  id: string;
-  status: string; // 'RECEIVED', 'PREPARING', 'READY', 'DELIVERED', 'COMPLETED', 'CANCELLED'
-  totalAmount: string | number;
-  createdAt: string;
-  source: string; // 'YEMEKSEPETI', 'TRENDYOL', 'GETIR', 'MIGROS'
-  note?: string;
-  rejectReason?: string;
-  items: OrderItem[];
-}
-
-export default function DashboardPage() {
+export default function DashboardOverviewPage() {
   const { user } = useAuthStore();
+  const [summary, setSummary] = useState<Summary | null>(null);
+  const [lowStockCount, setLowStockCount] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [testLoading, setTestLoading] = useState(false);
-  const [platformOrders, setPlatformOrders] = useState<Order[]>([]);
 
-  // Platform bazlı sipariş adetleri
-  const [ysCount, setYsCount] = useState(0);
-  const [tyCount, setTyCount] = useState(0);
-  const [gtCount, setGetirCount] = useState(0);
-  const [mgCount, setMigrosCount] = useState(0);
-
-  // Platform Mağaza Bağlantı/Açık-Kapalı Durumları [1]
-  const [platforms, setPlatforms] = useState([
-    { key: 'YEMEKSEPETI', name: 'Yemeksepeti', isActive: true, color: 'text-pink-500 bg-pink-950/20 border-pink-900/40' },
-    { key: 'TRENDYOL', name: 'Trendyol Yemek', isActive: true, color: 'text-orange-500 bg-orange-950/20 border-orange-900/40' },
-    { key: 'GETIR', name: 'Getir Yemek', isActive: true, color: 'text-purple-500 bg-purple-950/20 border-purple-900/40' },
-    { key: 'MIGROS', name: 'Migros Yemek', isActive: true, color: 'text-amber-500 bg-amber-950/20 border-amber-900/40' },
-  ]);
-
-  // Online Entegrasyon Verilerini Çekme [2]
-  const fetchPlatformData = useCallback(async () => {
+  const fetchData = useCallback(async () => {
     if (!user?.branchId) return;
     try {
-      const response = await api.get(`/orders?branchId=${user.branchId}`);
-      if (Array.isArray(response.data)) {
-        const allOrders = response.data as Order[];
-        
-        // Sadece arşivlenmemiş (COMPLETED ve CANCELLED olmayan) platform siparişlerini listele [2]
-        const onlineOrders = allOrders.filter(
-          (o) => ['YEMEKSEPETI', 'TRENDYOL', 'GETIR', 'MIGROS'].includes(o.source) && 
-                 o.status !== 'COMPLETED' && 
-                 o.status !== 'CANCELLED'
-        );
-
-        setPlatformOrders(onlineOrders.reverse());
-
-        // Platform bazlı aktif sipariş adetlerini eşle [2]
-        setYsCount(onlineOrders.filter((o) => o.source === 'YEMEKSEPETI').length);
-        setTyCount(onlineOrders.filter((o) => o.source === 'TRENDYOL').length);
-        setGetirCount(onlineOrders.filter((o) => o.source === 'GETIR').length);
-        setMigrosCount(onlineOrders.filter((o) => o.source === 'MIGROS').length);
-      } else {
-        setPlatformOrders([]);
-      }
-    } catch (error) {
-      console.error('Platform verileri çekilemedi:', error);
+      const [summaryRes, lowStockRes] = await Promise.all([
+        api.get(`/reports/summary?branchId=${user.branchId}`),
+        api.get(`/stock/low?branchId=${user.branchId}`),
+      ]);
+      setSummary(summaryRes.data);
+      setLowStockCount(Array.isArray(lowStockRes.data) ? lowStockRes.data.length : 0);
+    } catch (e) {
+      console.error(e);
     } finally {
       setLoading(false);
     }
   }, [user]);
 
   useEffect(() => {
-    void fetchPlatformData();
-  }, [fetchPlatformData]);
+    void fetchData();
+  }, [fetchData]);
 
-  // Real-time Sockets senkronizasyonu [1]
-  useEffect(() => {
-    if (!user?.branchId) return;
+  const stats = [
+    {
+      label: 'Günlük Ciro',
+      value: summary ? `${summary.totalRevenue.toFixed(2)} ₺` : '—',
+      icon: TrendingUp,
+      color: 'text-emerald-400 bg-emerald-950/30 border-emerald-900/40',
+    },
+    {
+      label: 'Tamamlanan Sipariş',
+      value: summary?.orderCount ?? '—',
+      icon: ShoppingBag,
+      color: 'text-indigo-400 bg-indigo-950/30 border-indigo-900/40',
+    },
+    {
+      label: 'Aktif Sipariş',
+      value: summary?.activeOrders ?? '—',
+      icon: UtensilsCrossed,
+      color: 'text-amber-400 bg-amber-950/30 border-amber-900/40',
+    },
+    {
+      label: 'Ortalama Sepet',
+      value: summary ? `${summary.averageTicket.toFixed(2)} ₺` : '—',
+      icon: Grid,
+      color: 'text-purple-400 bg-purple-950/30 border-purple-900/40',
+    },
+  ];
 
-    const socket = getSocket('http://localhost:3000');
-    socket.connect();
-
-    socket.emit('join_branch', { branchId: user.branchId });
-
-    socket.on('new_order', () => {
-      console.log('🔄 [SOCKET] New online order received, updating dashboard...');
-      void fetchPlatformData();
-    });
-
-    socket.on('order_status_changed', () => {
-      void fetchPlatformData();
-    });
-
-    return () => {
-      socket.off('new_order');
-      socket.off('order_status_changed');
-      socket.disconnect();
-    };
-  }, [user, fetchPlatformData]);
-
-  // Mağazayı Geçici Olarak Kapatma / Açma [1]
-  const togglePlatformStatus = (key: string) => {
-    setPlatforms((prev) =>
-      prev.map((plat) =>
-        plat.key === key ? { ...plat, isActive: !plat.isActive } : plat
-      )
-    );
-  };
-
-  // Kural A: Sipariş Kabul Etme (Durum PREPARING olur) [1]
-  const handleAcceptOrder = async (orderId: string) => {
-    try {
-      await api.patch(`/orders/${orderId}`, { status: 'PREPARING' });
-      alert('⚡ Sipariş kabul edildi! Hazırlık aşamasına alındı.');
-      void fetchPlatformData();
-    } catch (error) {
-      console.error('Sipariş kabul edilemedi:', error);
-    }
-  };
-
-  // Kural B: Sipariş Reddetme ve İptal Sebebi Girme Zorunluluğu [1]
-  const handleRejectOrder = async (orderId: string) => {
-    const reason = prompt('Lütfen sipariş reddetme sebebini yazın (Zorunlu):');
-    if (reason === null) return;
-    if (!reason.trim()) {
-      alert('HATA: Reddetme sebebi girmek zorunludur!');
-      return;
-    }
-
-    try {
-      await api.patch(`/orders/${orderId}`, { status: 'CANCELLED', rejectReason: reason });
-      alert(`❌ Sipariş "${reason}" gerekçesiyle reddedildi ve platforma bildirildi.`);
-      void fetchPlatformData();
-    } catch (error) {
-      console.error('Sipariş reddedilemedi:', error);
-    }
-  };
-
-  // Kural C: Sipariş Hazırlandı (Durum READY olur) [1]
-  const handlePrepareOrder = async (orderId: string) => {
-    try {
-      await api.patch(`/orders/${orderId}`, { status: 'READY' });
-      alert('⚡ Sipariş hazırlandı! Kuryeye verilebilir.');
-      void fetchPlatformData();
-    } catch (error) {
-      console.error('Sipariş durumu güncellenemedi:', error);
-    }
-  };
-
-  // Kural C: Sipariş Teslim Edildi / Yolda (Durum DELIVERED olur) [1]
-  const handleDeliverOrder = async (orderId: string) => {
-    try {
-      await api.patch(`/orders/${orderId}`, { status: 'DELIVERED' });
-      alert('⚡ Sipariş yola çıkarıldı / teslim aşamasında.');
-      void fetchPlatformData();
-    } catch (error) {
-      console.error('Sipariş teslim edilemedi:', error);
-    }
-  };
-
-  // Kural D: Siparişi Kapat / Ödemeyi Al (Durum COMPLETED olur, arşivlenir) [1]
-  const handleCompleteOrder = async (orderId: string) => {
-    try {
-      // Platform siparişleri paket servis olduğu için doğrudan CASH (Nakit/Online) kapatılır [1]
-      await api.post(`/orders/${orderId}/settle`, {
-        paymentMethod: 'CASH',
-        amount: Number(platformOrders.find((o) => o.id === orderId)?.totalAmount || 0),
-      });
-      alert('⚡ Sipariş başarıyla teslim edildi ve kapatıldı. Ciroya eklendi!');
-      void fetchPlatformData();
-    } catch (error) {
-      console.error('Sipariş kapatılamadı:', error);
-    }
-  };
-
-  // Canlı Dış Platform Sipariş Simülasyonu [2]
-  const handleSimulatePlatformOrder = async (platformName: string) => {
-    const targetPlat = platforms.find((p) => p.key === platformName);
-    if (targetPlat && !targetPlat.isActive) {
-      alert(`⚠️ [HATA] ${platformName} mağazası kapalı olduğu için sipariş kabul edilemez! Lütfen önce mağazayı açın.`);
-      return;
-    }
-
-    setTestLoading(true);
-    try {
-      await api.post('/orders/test-platform', {
-        branchId: user!.branchId,
-        platformName,
-      });
-      alert(`⚡ [SİMÜLASYON] ${platformName} üzerinden canlı yeni bir sipariş başarıyla simüle edildi!`);
-      void fetchPlatformData();
-    } catch (error) {
-      console.error('Simülasyon başarısız:', error);
-    } finally {
-      setTestLoading(false);
-    }
-  };
-
-  const getPlatformCount = (key: string) => {
-    if (key === 'YEMEKSEPETI') return ysCount;
-    if (key === 'TRENDYOL') return tyCount;
-    if (key === 'GETIR') return gtCount;
-    return mgCount;
-  };
+  const quickLinks = [
+    { href: '/dashboard/pos', label: 'Hızlı Sipariş (POS)', desc: 'Masa ve paket siparişi al' },
+    { href: '/dashboard/tables', label: 'Masa Takibi', desc: 'Adisyon, ödeme, masa işlemleri' },
+    { href: '/dashboard/kitchen', label: 'Mutfak Ekranı', desc: 'Aktif siparişleri görüntüle' },
+    { href: '/dashboard/integrations', label: 'Platform Siparişleri', desc: 'Yemeksepeti, Trendyol, Getir' },
+    { href: '/dashboard/reports', label: 'Raporlar', desc: 'Satış ve performans analizi' },
+    { href: '/dashboard/menu', label: 'Menü Yönetimi', desc: 'Kategori ve ürün düzenle' },
+  ];
 
   return (
-    <div className="space-y-6">
-      {/* Sayfa Başlığı ve Canlı Entegrasyon Sipariş Simülatörleri */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-gray-900 pb-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-white flex items-center gap-3">
-            <Radio className="h-8 w-8 text-indigo-500 animate-pulse" />
-            Online Entegrasyon Yönetim Merkezi
-          </h1>
-          <p className="text-gray-400 mt-1">Trendyol, Yemeksepeti, Getir ve Migros Yemek canlı sipariş kontrol istasyonu.</p>
-        </div>
+    <div className="space-y-8">
+      <PageHeader
+        title="Genel Durum"
+        description={`Hoş geldiniz, ${user?.firstName}. İşletmenizin anlık özeti.`}
+      />
 
-        <div className="flex gap-2 flex-wrap">
-          <button
-            onClick={() => void handleSimulatePlatformOrder('YEMEKSEPETI')}
-            disabled={testLoading}
-            className="rounded-lg bg-pink-700 hover:bg-pink-600 px-3 py-1.5 text-xs font-bold text-white transition-colors disabled:opacity-50"
-          >
-            Yemeksepeti Simüle Et
-          </button>
-          <button
-            onClick={() => void handleSimulatePlatformOrder('TRENDYOL')}
-            disabled={testLoading}
-            className="rounded-lg bg-orange-600 hover:bg-orange-500 px-3 py-1.5 text-xs font-bold text-white transition-colors disabled:opacity-50"
-          >
-            Trendyol Simüle Et
-          </button>
-          <button
-            onClick={() => void handleSimulatePlatformOrder('GETIR')}
-            disabled={testLoading}
-            className="rounded-lg bg-purple-700 hover:bg-purple-600 px-3 py-1.5 text-xs font-bold text-white transition-colors disabled:opacity-50"
-          >
-            Getir Simüle Et
-          </button>
-        </div>
-      </div>
-
-      {/* 4 Ana Platformun Durumu, Sipariş Adetleri ve AÇ/KAPAT Kontrolleri */}
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        {platforms.map((plat) => (
-          <div
-            key={plat.key}
-            className={`rounded-xl border p-5 shadow-sm flex flex-col justify-between h-36 transition-colors ${
-              plat.isActive 
-                ? plat.color 
-                : 'border-red-950/60 bg-red-950/5 text-red-500/60'
-            }`}
-          >
-            <div className="flex items-start justify-between">
-              <span className="text-xs font-extrabold tracking-wide uppercase">{plat.name}</span>
-              <span className={`rounded-full px-2 py-0.5 text-xxs font-extrabold border ${
-                plat.isActive 
-                  ? 'bg-emerald-950/40 text-emerald-400 border-emerald-900/50' 
-                  : 'bg-red-950/40 text-red-400 border-red-900/50'
-              }`}>
-                {plat.isActive ? 'AÇIK' : 'KAPALI'}
-              </span>
-            </div>
-            
-            <div className="flex items-center justify-between mt-2 pt-2 border-t border-white/5">
-              <div>
-                <p className={`text-2xl font-extrabold ${plat.isActive ? 'text-white' : 'text-red-500/40'}`}>
-                  {loading ? '...' : `${getPlatformCount(plat.key)} Adet`}
-                </p>
-              </div>
-              <button
-                onClick={() => togglePlatformStatus(plat.key)}
-                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xxs font-extrabold border transition-all ${
-                  plat.isActive
-                    ? 'bg-red-950/50 text-red-400 border-red-900/50 hover:bg-red-900 hover:text-white'
-                    : 'bg-emerald-950/50 text-emerald-400 border-emerald-900/50 hover:bg-emerald-600 hover:text-white'
-                }`}
-              >
-                {plat.isActive ? (
-                  <>
-                    <PowerOff className="h-3.5 w-3.5" />
-                    KAPAT
-                  </>
-                ) : (
-                  <>
-                    <Power className="h-3.5 w-3.5" />
-                    AÇ
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Alt Bölüm: Canlı Paket Sipariş Havuzu ve Kabul/Red/Durum Aksiyonları */}
-      <div className="rounded-xl border border-gray-900 bg-gray-900/40 p-6">
-        <div className="flex items-center justify-between border-b border-gray-900 pb-3 mb-4">
-          <h2 className="text-lg font-bold text-white flex items-center gap-2">
-            <PhoneCall className="h-5 w-5 text-indigo-500" />
-            Canlı Paket Sipariş Havuzu
-          </h2>
-          <button
-            onClick={() => void fetchPlatformData()}
-            className="text-gray-500 hover:text-white transition-colors flex items-center gap-1.5 text-xs font-bold"
-          >
-            <RefreshCw className="h-3.5 w-3.5" />
-            Yenile
-          </button>
-        </div>
-
-        {loading ? (
-          <p className="text-sm text-gray-400 py-6 text-center">Yükleniyor...</p>
-        ) : platformOrders.length === 0 ? (
-          <p className="text-sm text-gray-500 py-12 text-center border border-dashed border-gray-900 rounded-lg">
-            Şu anda platformlardan gelen aktif online paket siparişi bulunmuyor.
+      {lowStockCount > 0 && (
+        <div className="flex items-center gap-3 rounded-xl border border-amber-900/50 bg-amber-950/20 p-4 text-amber-300">
+          <AlertTriangle className="h-5 w-5 shrink-0" />
+          <p className="text-sm">
+            <strong>{lowStockCount}</strong> stok kalemi kritik seviyede.{' '}
+            <Link href="/dashboard/inventory" className="underline font-semibold">
+              Stok sayfasına git
+            </Link>
           </p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-gray-400">
-              <thead className="text-xs uppercase text-gray-500 border-b border-gray-900 bg-gray-950/30">
-                <tr>
-                  <th className="py-3 px-3">Platform</th>
-                  <th className="py-3 px-3">Müşteri / Teslimat Detayları</th>
-                  <th className="py-3 px-3">Sipariş İçeriği</th>
-                  <th className="py-3 px-3">Tutar</th>
-                  <th className="py-3 px-3">İşlem / Aksiyon</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-950">
-                {platformOrders.map((ord) => {
-                  const isReceived = ord.status === 'RECEIVED';
-                  const isPreparing = ord.status === 'PREPARING';
-                  const isReady = ord.status === 'READY';
-                  const isDelivered = ord.status === 'DELIVERED';
+        </div>
+      )}
 
-                  return (
-                    <tr key={ord.id} className="hover:bg-gray-900/10">
-                      <td className="py-4 px-3">
-                        <span className={`inline-flex items-center rounded-lg px-2.5 py-1 text-xs font-extrabold ${
-                          ord.source === 'YEMEKSEPETI'
-                            ? 'bg-pink-950/40 text-pink-400 border border-pink-900/50'
-                            : ord.source === 'TRENDYOL'
-                              ? 'bg-orange-950/40 text-orange-400 border border-orange-900/50'
-                              : 'bg-purple-950/40 text-purple-400 border border-purple-900/50'
-                        }`}>
-                          {ord.source}
-                        </span>
-                      </td>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {stats.map((s) => {
+          const Icon = s.icon;
+          return (
+            <div key={s.label} className={`rounded-xl border p-5 ${s.color}`}>
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-semibold uppercase tracking-wide opacity-80">{s.label}</p>
+                <Icon className="h-5 w-5 opacity-70" />
+              </div>
+              <p className="mt-3 text-2xl font-extrabold text-white">
+                {loading ? '...' : s.value}
+              </p>
+            </div>
+          );
+        })}
+      </div>
 
-                      <td className="py-4 px-3 max-w-xs">
-                        <p className="font-bold text-white text-sm">Ahmet Yılmaz</p>
-                        <p className="text-xxs text-gray-500 font-semibold mt-0.5">0555 444 33 22</p>
-                        <p className="text-xxs text-indigo-300 mt-1 line-clamp-1 italic">
-                          Adres: Atatürk Mah. 120. Sokak No:4 Daire:12
-                        </p>
-                      </td>
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div className="rounded-xl border border-gray-900 bg-gray-900/40 p-6">
+          <h2 className="text-lg font-bold text-white mb-4">Ödeme Dağılımı (Bugün)</h2>
+          {summary && Object.keys(summary.paymentsByMethod).length > 0 ? (
+            <ul className="space-y-2">
+              {Object.entries(summary.paymentsByMethod).map(([method, amount]) => (
+                <li key={method} className="flex justify-between text-sm">
+                  <span className="text-gray-400">{method}</span>
+                  <span className="font-bold text-white">{Number(amount).toFixed(2)} ₺</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-gray-500">Henüz ödeme kaydı yok.</p>
+          )}
+        </div>
 
-                      <td className="py-4 px-3 text-xs">
-                        <p className="font-bold text-white">2x Klasik Burger</p>
-                        {ord.note && (
-                          <p className="text-xxs text-amber-500 mt-0.5 italic font-semibold">Not: {ord.note}</p>
-                        )}
-                      </td>
-
-                      <td className="py-4 px-3 font-extrabold text-indigo-400 text-sm">
-                        {Number(ord.totalAmount).toFixed(2)} TL
-                      </td>
-
-                      {/* Çok Aşamalı Sipariş Yönetim Butonları [1, 2] */}
-                      <td className="py-4 px-3">
-                        {isReceived ? (
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => void handleAcceptOrder(ord.id)}
-                              className="flex items-center justify-center p-1.5 rounded-lg bg-emerald-950 border border-emerald-900/50 text-emerald-400 hover:bg-emerald-600 hover:text-white transition-colors"
-                              title="Kabul Et"
-                            >
-                              <Check className="h-4 w-4 shrink-0" />
-                              <span className="text-xxs font-extrabold px-1">KABUL</span>
-                            </button>
-                            <button
-                              onClick={() => void handleRejectOrder(ord.id)}
-                              className="flex items-center justify-center p-1.5 rounded-lg bg-red-950 border border-red-900/50 text-red-400 hover:bg-red-600 hover:text-white transition-colors"
-                              title="Gerekçe Girerek Reddet"
-                            >
-                              <X className="h-4 w-4 shrink-0" />
-                              <span className="text-xxs font-extrabold px-1">REDDET</span>
-                            </button>
-                          </div>
-                        ) : isPreparing ? (
-                          <button
-                            onClick={() => void handlePrepareOrder(ord.id)}
-                            className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold transition-all shadow-md shadow-amber-950/25"
-                          >
-                            <ChevronRight className="h-4 w-4 shrink-0" />
-                            Hazırlandı Yap
-                          </button>
-                        ) : isReady ? (
-                          <button
-                            onClick={() => void handleDeliverOrder(ord.id)}
-                            className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all shadow-md shadow-indigo-950/25"
-                          >
-                            <CheckCircle2 className="h-4 w-4 shrink-0" />
-                            Yola Çıkar / Teslim Et
-                          </button>
-                        ) : isDelivered ? (
-                          <button
-                            onClick={() => void handleCompleteOrder(ord.id)}
-                            className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-md shadow-emerald-950/25"
-                          >
-                            <Check className="h-4 w-4 shrink-0" />
-                            Kapat / Ödendi [1]
-                          </button>
-                        ) : (
-                          <span className="inline-flex items-center rounded-full bg-emerald-950/40 text-emerald-400 border border-emerald-900/50 px-2.5 py-1 text-xs font-bold">
-                            Kapatıldı / Ödendi
-                          </span>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
+        <div className="rounded-xl border border-gray-900 bg-gray-900/40 p-6">
+          <h2 className="text-lg font-bold text-white mb-4">Hızlı Erişim</h2>
+          <ul className="space-y-2">
+            {quickLinks.map((link) => (
+              <li key={link.href}>
+                <Link
+                  href={link.href}
+                  className="flex items-center justify-between rounded-lg px-3 py-2.5 hover:bg-gray-800/60 transition-colors group"
+                >
+                  <div>
+                    <p className="text-sm font-semibold text-white">{link.label}</p>
+                    <p className="text-xs text-gray-500">{link.desc}</p>
+                  </div>
+                  <ArrowRight className="h-4 w-4 text-gray-600 group-hover:text-indigo-400" />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
     </div>
   );

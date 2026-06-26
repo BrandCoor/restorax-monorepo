@@ -23,6 +23,7 @@ interface Category {
 interface Table {
   id: string;
   name: string;
+  capacity?: number;
   status: 'IDLE' | 'ORDERED' | 'PREPARING' | 'BILL_REQUESTED' | 'CLOSED';
 }
 
@@ -118,7 +119,7 @@ export default function POSPage() {
   useEffect(() => {
     if (!user?.branchId) return;
 
-    const socket = getSocket('http://localhost:3000');
+    const socket = getSocket(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000');
     socket.connect();
 
     socket.emit('join_branch', { branchId: user.branchId });

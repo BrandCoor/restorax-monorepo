@@ -17,7 +17,8 @@ export class CreateOrderDto {
   orderType!: 'TABLE' | 'DELIVERY' | 'TAKEAWAY'; 
   
   guestCount?: number; // Masadaki kişi sayısı parametresi [1]
-  
+  source?: string;
+
   customerName?: string;
   customerPhone?: string;
   customerAddress?: string;
