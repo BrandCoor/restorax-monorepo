@@ -27,66 +27,97 @@ export default function ReportsPage() {
     void load();
   }, [load]);
 
-  const s = summary as { orderCount?: number; totalRevenue?: number; averageTicket?: number; paymentsByMethod?: Record<string, number> } | null;
+  const s = summary as {
+    orderCount?: number;
+    totalRevenue?: number;
+    averageTicket?: number;
+    activeOrders?: number;
+    paymentsByMethod?: Record<string, number>;
+  } | null;
 
   return (
     <div className="space-y-6">
       <PageHeader title="Raporlar" description="Günlük ciro, ürün satışları ve garson performansı" />
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <div className="rounded-2xl border border-white/10 bg-slate-900/70 p-5 shadow-[0_0_0_1px_rgba(255,255,255,0.03)]">
-          <p className="text-xs text-gray-500 uppercase">Günlük Ciro</p>
-          <p className="text-2xl font-bold text-emerald-400 mt-1">{Number(s?.totalRevenue || 0).toFixed(2)} ₺</p>
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="rounded-2xl border border-emerald-900/40 bg-emerald-950/20 p-5">
+          <p className="text-xs uppercase tracking-[0.25em] text-emerald-300">Günlük Ciro</p>
+          <p className="mt-2 text-2xl font-bold text-emerald-300">{Number(s?.totalRevenue || 0).toFixed(2)} ₺</p>
         </div>
-        <div className="rounded-xl border border-gray-900 bg-gray-900/40 p-5">
-          <p className="text-xs text-gray-500 uppercase">Sipariş Sayısı</p>
-          <p className="text-2xl font-bold text-white mt-1">{s?.orderCount ?? 0}</p>
+        <div className="rounded-2xl border border-white/10 bg-slate-900/70 p-5">
+          <p className="text-xs uppercase tracking-[0.25em] text-gray-500">Sipariş Sayısı</p>
+          <p className="mt-2 text-2xl font-bold text-white">{s?.orderCount ?? 0}</p>
         </div>
-        <div className="rounded-xl border border-gray-900 bg-gray-900/40 p-5">
-          <p className="text-xs text-gray-500 uppercase">Ortalama Sepet</p>
-          <p className="text-2xl font-bold text-indigo-400 mt-1">{Number(s?.averageTicket || 0).toFixed(2)} ₺</p>
+        <div className="rounded-2xl border border-white/10 bg-slate-900/70 p-5">
+          <p className="text-xs uppercase tracking-[0.25em] text-gray-500">Aktif Sipariş</p>
+          <p className="mt-2 text-2xl font-bold text-amber-300">{s?.activeOrders ?? 0}</p>
+        </div>
+        <div className="rounded-2xl border border-indigo-900/40 bg-indigo-950/20 p-5">
+          <p className="text-xs uppercase tracking-[0.25em] text-indigo-300">Ortalama Sepet</p>
+          <p className="mt-2 text-2xl font-bold text-indigo-300">{Number(s?.averageTicket || 0).toFixed(2)} ₺</p>
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-xl border border-gray-900 bg-gray-900/40 p-6">
-          <h2 className="font-bold text-white mb-4">En Çok Satan Ürünler</h2>
-          <table className="w-full text-sm">
-            <thead className="text-xs text-gray-500 uppercase">
-              <tr><th className="text-left py-2">Ürün</th><th className="text-right">Adet</th><th className="text-right">Ciro</th></tr>
-            </thead>
-            <tbody className="divide-y divide-gray-900">
+      <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+        <div className="rounded-2xl border border-white/10 bg-slate-900/70 p-6">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-lg font-bold text-white">En Çok Satan Ürünler</h2>
+            <span className="rounded-full border border-white/10 bg-slate-950/70 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-gray-400">
+              Son 24 saat
+            </span>
+          </div>
+          {topProducts.length === 0 ? (
+            <p className="text-sm text-gray-500">Henüz satış verisi yok.</p>
+          ) : (
+            <div className="space-y-3">
               {topProducts.map((p) => (
-                <tr key={p.productName}>
-                  <td className="py-2 text-white">{p.productName}</td>
-                  <td className="py-2 text-right text-gray-400">{p.totalQty}</td>
-                  <td className="py-2 text-right text-indigo-400">{p.totalRevenue.toFixed(2)} ₺</td>
-                </tr>
+                <div key={p.productName} className="flex items-center justify-between rounded-xl border border-white/10 bg-slate-950/60 px-3 py-3">
+                  <div>
+                    <p className="font-semibold text-white">{p.productName}</p>
+                    <p className="text-sm text-gray-500">{p.totalQty} adet satıldı</p>
+                  </div>
+                  <p className="text-sm font-semibold text-indigo-300">{p.totalRevenue.toFixed(2)} ₺</p>
+                </div>
               ))}
-            </tbody>
-          </table>
+            </div>
+          )}
         </div>
 
-        <div className="rounded-xl border border-gray-900 bg-gray-900/40 p-6">
-          <h2 className="font-bold text-white mb-4">Garson Performansı</h2>
-          {waiters.length === 0 ? (
-            <p className="text-sm text-gray-500">Henüz garson bazlı satış verisi yok.</p>
-          ) : (
-            <table className="w-full text-sm">
-              <thead className="text-xs text-gray-500 uppercase">
-                <tr><th className="text-left py-2">Garson</th><th className="text-right">Sipariş</th><th className="text-right">Ciro</th></tr>
-              </thead>
-              <tbody className="divide-y divide-gray-900">
-                {waiters.map((w) => (
-                  <tr key={w.waiterName}>
-                    <td className="py-2 text-white">{w.waiterName}</td>
-                    <td className="py-2 text-right text-gray-400">{w.orderCount}</td>
-                    <td className="py-2 text-right text-indigo-400">{w.totalRevenue.toFixed(2)} ₺</td>
-                  </tr>
+        <div className="space-y-6">
+          <div className="rounded-2xl border border-white/10 bg-slate-900/70 p-6">
+            <h2 className="mb-4 text-lg font-bold text-white">Ödeme Yöntemleri</h2>
+            {s?.paymentsByMethod && Object.keys(s.paymentsByMethod).length > 0 ? (
+              <div className="space-y-2">
+                {Object.entries(s.paymentsByMethod).map(([method, amount]) => (
+                  <div key={method} className="flex items-center justify-between rounded-xl border border-white/10 bg-slate-950/60 px-3 py-2.5 text-sm">
+                    <span className="text-gray-400">{method}</span>
+                    <span className="font-semibold text-white">{Number(amount).toFixed(2)} ₺</span>
+                  </div>
                 ))}
-              </tbody>
-            </table>
-          )}
+              </div>
+            ) : (
+              <p className="text-sm text-gray-500">Henüz ödeme kaydı yok.</p>
+            )}
+          </div>
+
+          <div className="rounded-2xl border border-white/10 bg-slate-900/70 p-6">
+            <h2 className="mb-4 text-lg font-bold text-white">Garson Performansı</h2>
+            {waiters.length === 0 ? (
+              <p className="text-sm text-gray-500">Henüz garson bazlı satış verisi yok.</p>
+            ) : (
+              <div className="space-y-2">
+                {waiters.map((w) => (
+                  <div key={w.waiterName} className="flex items-center justify-between rounded-xl border border-white/10 bg-slate-950/60 px-3 py-2.5 text-sm">
+                    <div>
+                      <p className="font-semibold text-white">{w.waiterName}</p>
+                      <p className="text-gray-500">{w.orderCount} sipariş</p>
+                    </div>
+                    <p className="font-semibold text-indigo-300">{w.totalRevenue.toFixed(2)} ₺</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

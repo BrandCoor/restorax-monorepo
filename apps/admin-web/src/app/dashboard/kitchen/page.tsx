@@ -4,7 +4,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useAuthStore } from '@/store/authStore';
 import api from '@/services/api';
 import { getSocket } from '@/services/socket';
-import { UtensilsCrossed, Clock } from 'lucide-react';
+import { UtensilsCrossed, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
 
 interface OrderOption {
   id: string;
@@ -104,111 +104,115 @@ export default function KitchenPage() {
     return diffMins === 0 ? 'Şimdi' : `${diffMins} dk. önce`;
   };
 
+  const statusConfig: Record<string, { label: string; badge: string; actionLabel: string; actionColor: string }> = {
+    RECEIVED: { label: 'Yeni', badge: 'bg-amber-950/60 text-amber-300 border-amber-800/50', actionLabel: 'Hazırlamaya başla', actionColor: 'bg-amber-600 hover:bg-amber-500' },
+    PREPARING: { label: 'Hazırlanıyor', badge: 'bg-indigo-950/60 text-indigo-300 border-indigo-800/50', actionLabel: 'Hazırla', actionColor: 'bg-emerald-600 hover:bg-emerald-500' },
+    READY: { label: 'Hazır', badge: 'bg-emerald-950/60 text-emerald-300 border-emerald-800/50', actionLabel: 'Servise hazır', actionColor: '' },
+  };
+
   return (
     <div className="space-y-6">
-      {/* Sayfa Başlığı */}
-      <div className="flex items-center justify-between border-b border-gray-900 pb-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-white flex items-center gap-3">
-            <UtensilsCrossed className="h-8 w-8 text-indigo-500" />
-            Mutfak Ekranı (Canlı Sipariş Listesi)
-          </h1>
-          <p className="text-gray-400 mt-1">Ödemesi bekleyen tüm aktif siparişlerin şefler için yüksek yoğunluklu listesi [1].</p>
+      <div className="rounded-2xl border border-white/10 bg-slate-900/70 p-5 shadow-[0_0_0_1px_rgba(255,255,255,0.03)]">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <div className="flex items-center gap-3">
+              <div className="rounded-2xl bg-indigo-950/60 p-3">
+                <UtensilsCrossed className="h-7 w-7 text-indigo-400" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold tracking-tight text-white">Mutfak Ekranı</h1>
+                <p className="mt-1 text-sm text-gray-400">Aktif siparişleri hızlıca filtreleyip hazırlık aşamasına geçir.</p>
+              </div>
+            </div>
+          </div>
+          <div className="rounded-full border border-indigo-900/40 bg-indigo-950/30 px-3 py-1.5 text-sm font-semibold text-indigo-300">
+            {kitchenOrders.length} aktif sipariş
+          </div>
         </div>
-        <span className="rounded-full bg-indigo-900/50 border border-indigo-900 px-4 py-1.5 text-sm font-semibold text-indigo-400">
-          {kitchenOrders.length} Hazırlanan Sipariş
-        </span>
       </div>
 
       {loading ? (
-        <div className="flex h-64 items-center justify-center text-gray-400">
+        <div className="flex h-64 items-center justify-center rounded-2xl border border-dashed border-white/10 bg-slate-900/40 text-gray-400">
           Siparişler yükleniyor...
         </div>
       ) : kitchenOrders.length === 0 ? (
-        <div className="flex h-64 items-center justify-center rounded-xl border border-dashed border-gray-800 text-gray-500">
+        <div className="flex h-64 flex-col items-center justify-center rounded-2xl border border-dashed border-white/10 bg-slate-900/40 text-gray-500">
+          <AlertCircle className="mb-2 h-8 w-8 text-gray-600" />
           Şu anda mutfakta hazırlanacak sipariş bulunmuyor.
         </div>
       ) : (
-        /* Yüksek Yoğunluklu Profesyonel Sipariş Liste Yapısı (Table/Row View) [1] */
-        <div className="overflow-hidden rounded-xl border border-gray-900 bg-gray-900/20">
-          <table className="w-full text-left text-sm text-gray-400">
-            <thead className="text-xs uppercase text-gray-500 bg-gray-950 border-b border-gray-900">
-              <tr>
-                <th className="py-3.5 px-4 w-32">Sipariş Saati</th>
-                <th className="py-3.5 px-4 w-40">Masa / Sipariş</th>
-                <th className="py-3.5 px-4">Sipariş Kalemleri ve Mutfak Detayları</th>
-                <th className="py-3.5 px-4 w-64">Sipariş Notu</th>
-                <th className="py-3.5 px-4 w-40">İşlem</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-950">
-              {kitchenOrders.map((order) => (
-                <tr key={order.id} className="hover:bg-gray-900/10">
-                  {/* Sipariş Saati */}
-                  <td className="py-4 px-4 font-semibold text-gray-300">
-                    <div className="flex items-center gap-1.5">
-                      <Clock className="h-4 w-4 text-indigo-500" />
-                      {getMinutesAgo(order.createdAt)}
-                    </div>
-                  </td>
+        <div className="grid gap-4 xl:grid-cols-2">
+          {kitchenOrders.map((order) => {
+            const config = statusConfig[order.status] ?? statusConfig.RECEIVED;
+            return (
+              <div key={order.id} className="rounded-2xl border border-white/10 bg-slate-900/70 p-4 shadow-[0_0_0_1px_rgba(255,255,255,0.03)]">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold text-gray-400">{getMinutesAgo(order.createdAt)}</p>
+                    <h2 className="mt-1 text-lg font-bold text-white">
+                      {order.table ? order.table.name : 'Paket Servis'}
+                    </h2>
+                  </div>
+                  <span className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${config.badge}`}>
+                    {config.label}
+                  </span>
+                </div>
 
-                  {/* Masa / Sipariş */}
-                  <td className="py-4 px-4 font-bold text-white text-base">
-                    {order.table ? order.table.name : 'Paket Servis'}
-                  </td>
-
-                  {/* Sipariş İçeriği (Ürün Adetleri ve Seçenekleri) */}
-                  <td className="py-4 px-4 space-y-2">
-                    {order.items?.map((item) => (
-                      <div key={item.id} className="flex flex-col">
+                <div className="mt-4 space-y-3">
+                  {order.items.map((item) => (
+                    <div key={item.id} className="rounded-xl border border-white/10 bg-slate-950/60 p-3">
+                      <div className="flex items-start justify-between gap-3">
                         <p className="text-sm font-bold text-white">
-                          <span className="text-indigo-400 mr-2">{item.quantity}x</span>
+                          <span className="mr-2 text-indigo-400">{item.quantity}x</span>
                           {item.product.name}
-                          {item.note && (
-                            <span className="text-xs text-amber-500 italic ml-3 font-semibold">
-                              (* Not: {item.note})
-                            </span>
-                          )}
                         </p>
-                        {item.options && item.options.length > 0 && (
-                          <div className="pl-6 flex gap-1.5 flex-wrap mt-0.5">
-                            {item.options.map((opt) => (
-                              <span key={opt.id} className="text-xs text-gray-500 font-semibold bg-gray-950 px-2 py-0.5 rounded border border-gray-900">
-                                + {opt.optionValue.name}
-                              </span>
-                            ))}
-                          </div>
+                        {item.note && (
+                          <span className="text-[11px] font-semibold text-amber-400">Not</span>
                         )}
                       </div>
-                    ))}
-                  </td>
+                      {item.note && <p className="mt-2 text-sm text-gray-400">{item.note}</p>}
+                      {item.options && item.options.length > 0 && (
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {item.options.map((opt) => (
+                            <span key={opt.id} className="rounded-full border border-white/10 bg-slate-900/70 px-2 py-0.5 text-[11px] text-gray-400">
+                              + {opt.optionValue.name}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
 
-                  {/* Genel Sipariş Notu */}
-                  <td className="py-4 px-4">
-                    {order.note ? (
-                      <span className="text-xs font-semibold text-indigo-300 bg-indigo-950/20 border border-indigo-900/30 px-2.5 py-1 rounded-lg">
-                        {order.note}
-                      </span>
-                    ) : (
-                      <span className="text-gray-600 text-xs italic">Not yok</span>
-                    )}
-                  </td>
+                {order.note && (
+                  <div className="mt-4 rounded-xl border border-indigo-900/40 bg-indigo-950/20 p-3 text-sm text-indigo-200">
+                    <p className="font-semibold">Sipariş notu</p>
+                    <p className="mt-1 text-indigo-100/90">{order.note}</p>
+                  </div>
+                )}
 
-                  <td className="py-4 px-4 space-y-1">
-                    {order.status === 'RECEIVED' && (
-                      <button onClick={() => void updateStatus(order.id, 'PREPARING')} className="text-xs px-2 py-1 rounded bg-amber-700 w-full">Hazırlanıyor</button>
-                    )}
-                    {order.status === 'PREPARING' && (
-                      <button onClick={() => void updateStatus(order.id, 'READY')} className="text-xs px-2 py-1 rounded bg-emerald-700 w-full">Hazır</button>
-                    )}
-                    {order.status === 'READY' && (
-                      <span className="text-xs text-emerald-400 font-bold">Servise hazır</span>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                <div className="mt-4 flex items-center justify-between border-t border-white/10 pt-3">
+                  <div className="flex items-center gap-2 text-sm text-gray-400">
+                    <Clock className="h-4 w-4" />
+                    {getMinutesAgo(order.createdAt)}
+                  </div>
+                  {order.status === 'READY' ? (
+                    <div className="flex items-center gap-2 text-sm font-semibold text-emerald-400">
+                      <CheckCircle2 className="h-4 w-4" />
+                      Servise hazır
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => void updateStatus(order.id, order.status === 'RECEIVED' ? 'PREPARING' : 'READY')}
+                      className={`rounded-lg px-3 py-2 text-sm font-semibold text-white ${config.actionColor}`}
+                    >
+                      {config.actionLabel}
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
