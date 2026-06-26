@@ -39,6 +39,12 @@ export class Order {
   @JoinColumn({ name: 'waiter_id' })
   waiter?: User;
 
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0.0 })
+  discount: number; // Adisyona uygulanan toplam indirim tutarı
+
+  @Column({ name: 'guest_count', type: 'int', default: 1 })
+  guestCount: number; // Masadaki kişi sayısı takibi [1]
+
   @Column({ name: 'customer_id', type: 'uuid', nullable: true })
   customerId?: string; // CRM entegrasyonu için şimdilik sade UUID olarak tutuyoruz
 
@@ -60,6 +66,7 @@ export class Order {
   @Column({ type: 'text', nullable: true })
   note?: string;
 
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   @OneToMany(() => OrderItem, (item: OrderItem) => item.order)
   items: OrderItem[];
 

@@ -1,12 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { MenuService } from './menu.service';
 import { CreateMenuDto } from './dto/create-menu.dto';
 import { UpdateMenuDto } from './dto/update-menu.dto';
@@ -21,7 +13,10 @@ export class MenuController {
   }
 
   @Get()
-  findAll() {
+  findAll(@Query('branchId') branchId?: string) {
+    if (branchId) {
+      return this.menuService.findAllByBranch(branchId);
+    }
     return this.menuService.findAll();
   }
 

@@ -11,8 +11,16 @@ export class CreateOrderItemDto {
 
 export class CreateOrderDto {
   branchId!: string;
-  tableId?: string;
-  waiterId?: string;
+  tableId?: string; // Masa siparişi ise dolu gelir
+  waiterId?: string; // Garson siparişi ise dolu gelir
   note?: string;
+  orderType!: 'TABLE' | 'DELIVERY' | 'TAKEAWAY'; 
+  
+  guestCount?: number; // Masadaki kişi sayısı parametresi [1]
+  
+  customerName?: string;
+  customerPhone?: string;
+  customerAddress?: string;
+  
   items!: CreateOrderItemDto[];
 }

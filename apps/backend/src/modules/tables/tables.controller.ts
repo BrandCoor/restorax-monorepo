@@ -1,12 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { TablesService } from './tables.service';
 import { CreateTableDto } from './dto/create-table.dto';
 import { UpdateTableDto } from './dto/update-table.dto';
@@ -21,7 +13,10 @@ export class TablesController {
   }
 
   @Get()
-  findAll() {
+  findAll(@Query('branchId') branchId?: string) {
+    if (branchId) {
+      return this.tablesService.findAllByBranch(branchId);
+    }
     return this.tablesService.findAll();
   }
 

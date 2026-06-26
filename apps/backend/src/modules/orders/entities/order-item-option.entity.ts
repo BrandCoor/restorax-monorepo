@@ -1,11 +1,4 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  ManyToOne,
-  JoinColumn,
-  CreateDateColumn,
-} from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn } from 'typeorm';
 import { OrderItem } from './order-item.entity';
 import { ProductOptionValue } from '../../menu/entities/product-option-value.entity';
 
@@ -14,9 +7,8 @@ export class OrderItemOption {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => OrderItem, (item: OrderItem) => item.options, {
-    onDelete: 'CASCADE',
-  })
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+  @ManyToOne(() => OrderItem, (item: OrderItem) => item.options, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'order_item_id' })
   orderItem: OrderItem;
 
@@ -25,7 +17,7 @@ export class OrderItemOption {
   optionValue: ProductOptionValue;
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })
-  price: number; // Seçildiği andaki ekstra opsiyon fiyatı
+  price: number;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

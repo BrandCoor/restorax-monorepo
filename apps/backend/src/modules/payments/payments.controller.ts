@@ -1,12 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { PaymentsService } from './payments.service';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 import { UpdatePaymentDto } from './dto/update-payment.dto';
@@ -14,6 +6,11 @@ import { UpdatePaymentDto } from './dto/update-payment.dto';
 @Controller('payments')
 export class PaymentsController {
   constructor(private readonly paymentsService: PaymentsService) {}
+
+  @Get('today-total')
+  getTodayTotal(@Query('branchId') branchId: string) {
+    return this.paymentsService.getTodayTotal(branchId);
+  }
 
   @Post()
   create(@Body() createPaymentDto: CreatePaymentDto) {
