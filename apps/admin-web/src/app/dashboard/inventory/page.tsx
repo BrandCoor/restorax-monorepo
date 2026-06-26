@@ -25,7 +25,9 @@ export default function InventoryPage() {
     setItems(res.data);
   }, [user]);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    void load();
+  }, [load]);
 
   const addItem = async () => {
     if (!form || !user?.branchId) return;
@@ -60,7 +62,7 @@ export default function InventoryPage() {
         }
       />
 
-      <div className="rounded-xl border border-gray-900 overflow-hidden">
+      <div className="overflow-hidden rounded-2xl border border-white/10 bg-slate-900/70 shadow-[0_0_0_1px_rgba(255,255,255,0.03)]">
         <table className="w-full text-sm">
           <thead className="bg-gray-900/60 text-xs uppercase text-gray-500">
             <tr>

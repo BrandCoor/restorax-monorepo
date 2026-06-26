@@ -26,7 +26,9 @@ export default function PrintersPage() {
     setPrinters(res.data);
   }, [user]);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    void load();
+  }, [load]);
 
   const addPrinter = async () => {
     if (!form || !user?.branchId) return;

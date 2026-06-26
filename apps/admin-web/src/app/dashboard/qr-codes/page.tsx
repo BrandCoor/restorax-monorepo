@@ -29,7 +29,9 @@ export default function QrCodesPage() {
     setSections(res.data);
   }, [user]);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    void load();
+  }, [load]);
 
   const generateQr = async (tableId: string) => {
     const res = await api.post(`/qr-menu/generate/${tableId}?baseUrl=${encodeURIComponent(baseUrl)}`);

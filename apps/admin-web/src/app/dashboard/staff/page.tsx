@@ -27,7 +27,9 @@ export default function StaffPage() {
     setStaff(res.data);
   }, [user]);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    void load();
+  }, [load]);
 
   const addStaff = async () => {
     if (!user?.branchId) return;

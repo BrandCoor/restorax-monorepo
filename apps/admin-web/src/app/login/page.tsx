@@ -27,19 +27,19 @@ export default function LoginPage() {
 
       // Başarılı giriş sonrası yönetim paneline yönlendir
       router.push('/dashboard');
-    } catch (err: any) {
-      setError(
-        err.response?.data?.message || 
-        'Giriş yapılamadı. Lütfen bilgilerinizi kontrol edin.'
-      );
+    } catch (err: unknown) {
+      const message = err instanceof Error
+        ? err.message
+        : (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      setError(message || 'Giriş yapılamadı. Lütfen bilgilerinizi kontrol edin.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-950 p-4">
-      <div className="w-full max-w-md space-y-8 rounded-2xl border border-gray-800 bg-gray-900 p-8 shadow-2xl">
+    <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(99,102,241,0.3),_transparent_35%),_#050816] p-4">
+      <div className="w-full max-w-md space-y-8 rounded-2xl border border-white/10 bg-slate-900/80 p-8 shadow-2xl shadow-black/30 backdrop-blur">
         <div className="text-center">
           <h1 className="text-3xl font-extrabold tracking-tight text-white">RestoraX</h1>
           <p className="mt-2 text-sm text-gray-400">Yönetici ve Personel Giriş Paneli</p>

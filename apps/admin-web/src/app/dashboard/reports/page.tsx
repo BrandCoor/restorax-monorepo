@@ -34,7 +34,7 @@ export default function ReportsPage() {
       <PageHeader title="Raporlar" description="Günlük ciro, ürün satışları ve garson performansı" />
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <div className="rounded-xl border border-gray-900 bg-gray-900/40 p-5">
+        <div className="rounded-2xl border border-white/10 bg-slate-900/70 p-5 shadow-[0_0_0_1px_rgba(255,255,255,0.03)]">
           <p className="text-xs text-gray-500 uppercase">Günlük Ciro</p>
           <p className="text-2xl font-bold text-emerald-400 mt-1">{Number(s?.totalRevenue || 0).toFixed(2)} ₺</p>
         </div>

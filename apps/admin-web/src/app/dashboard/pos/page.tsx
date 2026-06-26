@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 import api from '@/services/api';
 import { getSocket } from '@/services/socket';
-import { ShoppingCart, Plus, Minus, Send, PhoneCall, TableProperties, Trash2, Search, ScanBarcode, ArrowLeft, Users, MessageSquare, Receipt } from 'lucide-react';
+import { ShoppingCart, Plus, Minus, Send, Trash2, Search, ScanBarcode, ArrowLeft, Users, MessageSquare, Receipt } from 'lucide-react';
 
 interface Product {
   id: string;
@@ -308,15 +308,13 @@ export default function POSPage() {
 
   return (
     <div className="flex h-[calc(100vh-4rem)] gap-6 overflow-hidden select-none">
-      
-      {/* SOL PANEL: Masalar Şeması VEYA Menü Seçim Ekranı [1] */}
-      <div className="flex-1 flex flex-col justify-between overflow-hidden bg-gray-900/10 rounded-2xl border border-gray-900 p-5">
+      <div className="flex-1 flex flex-col justify-between overflow-hidden rounded-2xl border border-white/10 bg-slate-900/70 p-5 shadow-[0_0_0_1px_rgba(255,255,255,0.03)]">
         
         {leftView === 'TABLES' ? (
           /* MASALAR ŞEMASI GÖRÜNÜMÜ [1] */
           <div className="space-y-5 overflow-y-auto pr-1 flex-1">
             {/* Alan/Salon Sekmeleri (Hızlı Satış ve Paket Servis dahil edildi) [2] */}
-            <div className="flex gap-2 border-b border-gray-900 pb-3 overflow-x-auto">
+            <div className="flex gap-2 border-b border-white/10 pb-3 overflow-x-auto">
               {sections.map((sec) => (
                 <button
                   key={sec.id}
@@ -386,7 +384,7 @@ export default function POSPage() {
           <div className="space-y-5 overflow-y-auto pr-1 flex-1 flex flex-col justify-between">
             {/* Üst Kısım: Geri Dönüş ve Kategori Sekmeleri */}
             <div className="space-y-4">
-              <div className="flex items-center justify-between border-b border-gray-900 pb-3">
+              <div className="flex items-center justify-between border-b border-white/10 pb-3">
                 <button
                   onClick={() => {
                     setLeftView('TABLES');
@@ -428,7 +426,7 @@ export default function POSPage() {
                 <div
                   key={prod.id}
                   onClick={() => addToCart(prod)}
-                  className="rounded-xl border border-gray-800 bg-gray-900/30 p-4 cursor-pointer hover:border-indigo-600 transition-colors flex flex-col justify-between h-32"
+                  className="rounded-2xl border border-white/10 bg-slate-950/50 p-4 cursor-pointer transition-colors hover:border-indigo-500 hover:bg-slate-900/80 flex flex-col justify-between h-32"
                 >
                   <div>
                     <h3 className="font-bold text-white text-sm leading-snug truncate">{prod.name}</h3>
@@ -448,10 +446,10 @@ export default function POSPage() {
       </div>
 
       {/* SAĞ PANEL: Sabit Alışveriş Kartı & Sipariş Detayları [1] */}
-      <div className="w-96 flex flex-col justify-between bg-gray-900/40 rounded-2xl border border-gray-900 overflow-hidden">
+      <div className="flex w-96 flex-col justify-between overflow-hidden rounded-2xl border border-white/10 bg-slate-900/70 shadow-[0_0_0_1px_rgba(255,255,255,0.03)]">
         
         {/* Üst Kart Başlığı ve Hızlı Arama/Barkod Alanları */}
-        <div className="p-4 border-b border-gray-900 bg-gray-900/80 space-y-3">
+        <div className="space-y-3 border-b border-white/10 bg-slate-950/50 p-4">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-bold text-white flex items-center gap-2">
               <ShoppingCart className="h-4 w-4 text-indigo-500" />
@@ -648,7 +646,7 @@ export default function POSPage() {
 
         {/* Sepet Toplamı ve Onaylama Butonu */}
         {(leftView === 'MENU' || !selectedTable) && (
-          <div className="p-4 border-t border-gray-900 bg-gray-900/80 space-y-4">
+          <div className="space-y-4 border-t border-white/10 bg-slate-950/50 p-4">
             <div className="flex items-center justify-between text-base font-bold text-white">
               <span>Toplam Tutar:</span>
               <span className="text-indigo-400 text-lg">{getCartTotal()} TL</span>

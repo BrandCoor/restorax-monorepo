@@ -336,10 +336,15 @@ export default function TablesPage() {
   return (
     <div className="space-y-6">
       {/* Sayfa Başlığı */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-white">Masa Takibi</h1>
-          <p className="text-gray-400 mt-1">Adisyon parçalama, masa taşıma, birleştirme ve ödeme yönetimi (Anlık Eşzamanlanır).</p>
+      <div className="rounded-2xl border border-white/10 bg-slate-900/70 p-5 shadow-[0_0_0_1px_rgba(255,255,255,0.03)]">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight text-white">Masa Takibi</h1>
+            <p className="mt-1 text-gray-400">Adisyon parçalama, masa taşıma, birleştirme ve ödeme yönetimi (Anlık Eşzamanlanır).</p>
+          </div>
+          <div className="rounded-full border border-indigo-900/40 bg-indigo-950/30 px-3 py-1 text-xs font-semibold text-indigo-300">
+            Canlı operasyon
+          </div>
         </div>
       </div>
 
@@ -355,7 +360,7 @@ export default function TablesPage() {
         <div className="space-y-8">
           {sections.map((section) => (
             <div key={section.id} className="space-y-4">
-              <div className="flex items-center gap-3 border-b border-gray-900 pb-2">
+              <div className="flex items-center gap-3 border-b border-white/10 pb-2">
                 <Grid className="h-5 w-5 text-indigo-500" />
                 <h2 className="text-lg font-bold text-white">{section.name}</h2>
                 <span className="rounded-full bg-gray-900 px-2 py-0.5 text-xs text-gray-400 font-semibold">
@@ -372,7 +377,7 @@ export default function TablesPage() {
                     <div
                       key={table.id}
                       onClick={() => void handleTableClick(table)}
-                      className={`group relative rounded-xl border p-5 shadow-sm transition-all duration-200 hover:scale-[1.02] cursor-pointer ${style.bg}`}
+                      className={`group relative rounded-2xl border p-5 shadow-sm transition-all duration-200 hover:scale-[1.02] cursor-pointer ${style.bg}`}
                     >
                       <div className="flex items-start justify-between">
                         <div>
@@ -631,7 +636,7 @@ export default function TablesPage() {
                       className="w-full flex items-center justify-center gap-2 rounded-lg bg-gray-950 hover:bg-gray-900 border border-gray-800 px-4 py-2 text-xs font-semibold text-gray-400 transition-colors"
                     >
                       <Printer className="h-4 w-4" />
-                      Hesap Adisyonu Çıkar (Masa Durumunu "Hesap İstendi" Yapar)
+                      Hesap Adisyonu Çıkar (Masa Durumunu &quot;Hesap İstendi&quot; Yapar)
                     </button>
                   )}
                 </div>

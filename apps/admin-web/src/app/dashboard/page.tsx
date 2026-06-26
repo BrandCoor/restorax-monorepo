@@ -103,13 +103,13 @@ export default function DashboardOverviewPage() {
         </div>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {stats.map((s) => {
           const Icon = s.icon;
           return (
-            <div key={s.label} className={`rounded-xl border p-5 ${s.color}`}>
+            <div key={s.label} className={`rounded-2xl border p-5 shadow-[0_0_0_1px_rgba(255,255,255,0.03)] ${s.color}`}>
               <div className="flex items-center justify-between">
-                <p className="text-xs font-semibold uppercase tracking-wide opacity-80">{s.label}</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.25em] opacity-80">{s.label}</p>
                 <Icon className="h-5 w-5 opacity-70" />
               </div>
               <p className="mt-3 text-2xl font-extrabold text-white">

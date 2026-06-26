@@ -45,18 +45,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   React.useEffect(() => {
     setMounted(true);
+  }, []);
+
+  React.useEffect(() => {
+    if (!mounted) return;
     if (!token || !user) {
       router.push('/login');
     }
-  }, [token, user, router]);
+  }, [mounted, token, user, router]);
 
   if (!mounted || !user) return null;
 
   return (
-    <div className="flex h-screen bg-gray-950 text-white overflow-hidden">
-      <aside className="w-64 border-r border-gray-900 bg-gray-900/50 flex flex-col shrink-0 overflow-y-auto">
-        <div className="h-16 flex items-center px-6 border-b border-gray-900 shrink-0">
-          <span className="text-xl font-extrabold text-white tracking-wide">RestoraX</span>
+    <div className="flex h-screen overflow-hidden bg-gray-950 text-white">
+      <aside className="flex w-64 shrink-0 flex-col overflow-y-auto border-r border-white/10 bg-slate-950/70 backdrop-blur">
+        <div className="flex h-16 shrink-0 items-center border-b border-white/10 px-6">
+          <span className="text-xl font-extrabold tracking-wide text-white">RestoraX</span>
         </div>
 
         <nav className="p-3 space-y-0.5 flex-1">

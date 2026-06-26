@@ -4,7 +4,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useAuthStore } from '@/store/authStore';
 import api from '@/services/api';
 import PageHeader from '@/components/PageHeader';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 
 interface Product {
   id: string;
@@ -77,14 +77,14 @@ export default function MenuManagementPage() {
     <div className="space-y-6">
       <PageHeader title="Menü Yönetimi" description="Kategori ve ürünlerinizi düzenleyin" />
 
-      <div className="rounded-xl border border-gray-900 bg-gray-900/40 p-4 flex gap-2">
+      <div className="flex flex-col gap-2 rounded-2xl border border-white/10 bg-slate-900/70 p-4 shadow-[0_0_0_1px_rgba(255,255,255,0.03)] sm:flex-row">
         <input
           value={newCategory}
           onChange={(e) => setNewCategory(e.target.value)}
           placeholder="Yeni kategori adı"
-          className="flex-1 rounded-lg border border-gray-800 bg-gray-950 px-4 py-2 text-sm text-white"
+          className="flex-1 rounded-lg border border-white/10 bg-gray-950/70 px-4 py-2 text-sm text-white"
         />
-        <button onClick={() => void addCategory()} className="px-4 py-2 rounded-lg bg-indigo-600 text-sm font-bold flex items-center gap-1">
+        <button onClick={() => void addCategory()} className="flex items-center justify-center gap-1 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-bold transition hover:bg-indigo-500">
           <Plus className="h-4 w-4" /> Kategori Ekle
         </button>
       </div>
@@ -94,12 +94,12 @@ export default function MenuManagementPage() {
       ) : (
         <div className="space-y-6">
           {categories.map((cat) => (
-            <div key={cat.id} className="rounded-xl border border-gray-900 bg-gray-900/30 p-5">
-              <div className="flex justify-between items-center mb-4">
+            <div key={cat.id} className="rounded-2xl border border-white/10 bg-slate-900/70 p-5 shadow-[0_0_0_1px_rgba(255,255,255,0.03)]">
+              <div className="mb-4 flex items-center justify-between">
                 <h2 className="text-lg font-bold text-white">{cat.name}</h2>
                 <button
                   onClick={() => setProductForm({ categoryId: cat.id, name: '', price: '' })}
-                  className="text-xs px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 flex items-center gap-1"
+                  className="flex items-center gap-1 rounded-lg bg-gray-800 px-3 py-1.5 text-xs font-semibold transition hover:bg-gray-700"
                 >
                   <Plus className="h-3 w-3" /> Ürün Ekle
                 </button>

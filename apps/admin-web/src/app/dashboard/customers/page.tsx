@@ -27,7 +27,9 @@ export default function CustomersPage() {
     setCustomers(res.data);
   }, [user]);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    void load();
+  }, [load]);
 
   const addCustomer = async () => {
     if (!form || !user?.restaurantId) return;

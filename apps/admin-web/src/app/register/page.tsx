@@ -46,8 +46,8 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-950 flex items-center justify-center p-4">
-      <div className="w-full max-w-lg rounded-2xl border border-gray-800 bg-gray-900 p-8">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(99,102,241,0.3),_transparent_35%),_#050816] flex items-center justify-center p-4">
+      <div className="w-full max-w-lg rounded-2xl border border-white/10 bg-slate-900/80 p-8 shadow-2xl shadow-black/30 backdrop-blur">
         <h1 className="text-2xl font-extrabold text-white text-center">RestoraX&apos;a Kayıt Ol</h1>
         <p className="text-sm text-gray-400 text-center mt-2">Restoranınızı dakikalar içinde dijitalleştirin</p>
 
